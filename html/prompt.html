@@ -168,6 +168,14 @@
                 setPromptText(generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, selectedFreeze, newChannels));
             };
 
+            const handleCopyToClipboard = () => {
+                navigator.clipboard.writeText(promptText).then(() => {
+                    alert('Prompt copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            };
+
             return html`
                 <div class="container mt-5">
                     <h1 class="mb-4">Octopus Easy Mode</h1>
@@ -238,7 +246,12 @@
                     </table>
 
                     <div class="mt-4">
-                        <h3>Prompt</h3>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">Prompt</h3>
+                            <button class="btn btn-primary" onClick=${handleCopyToClipboard}>
+                                <i class="fas fa-copy me-2"></i>Copy to clipboard
+                            </button>
+                        </div>
                         <textarea
                             class="form-control"
                             rows="10"
