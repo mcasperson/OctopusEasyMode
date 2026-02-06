@@ -49,7 +49,9 @@
         function App() {
             const [selectedPlatform, setSelectedPlatform] = useState('kubernetes');
             const [selectedTenant, setSelectedTenant] = useState(null);
-            const [selectedRunbook, setSelectedRunbook] = useState(null);
+            const [selectedRunbooks, setSelectedRunbooks] = useState([]);
+            const [selectedFreeze, setSelectedFreeze] = useState(null);
+            const [selectedChannels, setSelectedChannels] = useState([]);
             const [promptText, setPromptText] = useState('Create a Kubernetes project called "My K8s WebApp"');
 
             const platforms = [
@@ -74,7 +76,19 @@
                 { id: 'logs', name: 'Logs', icon: 'fas fa-file-alt', instruction: '* Add a runbook to simulate the retrival of logs' }
             ];
 
-            const generatePrompt = (platformId, tenantId, runbookId) => {
+            const freezes = [
+                { id: 'christmas', name: 'Christmas', icon: 'fas fa-tree', instruction: '* Create a global freeze for Christmas' },
+                { id: 'newyear', name: 'New Year', icon: 'fas fa-champagne-glasses', instruction: '* Create a global freeze for New Year' },
+                { id: 'blackfriday', name: 'Black Friday', icon: 'fas fa-tag', instruction: '* Create a global freeze for Black Friday' },
+                { id: 'cybermonday', name: 'Cyber Monday', icon: 'fas fa-laptop', instruction: '* Create a global freeze for Cyber Monday' }
+            ];
+
+            const channels = [
+                { id: 'hotfix', name: 'Hot Fix', icon: 'fas fa-fire-extinguisher', instruction: '* Create a Hot Fix channel' },
+                { id: 'featurebranch', name: 'Feature Branch', icon: 'fas fa-code-branch', instruction: '* Create a Feature Branch channel' }
+            ];
+
+            const generatePrompt = (platformId, tenantId, runbookIds, freezeId, channelIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
 
@@ -88,11 +102,29 @@
                     }
                 }
 
-                if (runbookId) {
-                    const runbook = runbooks.find(r => r.id === runbookId);
-                    if (runbook && runbook.instruction) {
-                        additionalInstructions.push(runbook.instruction);
+                if (runbookIds && runbookIds.length > 0) {
+                    runbookIds.forEach(runbookId => {
+                        const runbook = runbooks.find(r => r.id === runbookId);
+                        if (runbook && runbook.instruction) {
+                            additionalInstructions.push(runbook.instruction);
+                        }
+                    });
+                }
+
+                if (freezeId) {
+                    const freeze = freezes.find(f => f.id === freezeId);
+                    if (freeze && freeze.instruction) {
+                        additionalInstructions.push(freeze.instruction);
                     }
+                }
+
+                if (channelIds && channelIds.length > 0) {
+                    channelIds.forEach(channelId => {
+                        const channel = channels.find(c => c.id === channelId);
+                        if (channel && channel.instruction) {
+                            additionalInstructions.push(channel.instruction);
+                        }
+                    });
                 }
 
                 if (additionalInstructions.length > 0) {
@@ -105,19 +137,35 @@
             const handlePlatformClick = (platformId) => {
                 if (selectedPlatform === platformId) return;
                 setSelectedPlatform(platformId);
-                setPromptText(generatePrompt(platformId, selectedTenant, selectedRunbook));
+                setPromptText(generatePrompt(platformId, selectedTenant, selectedRunbooks, selectedFreeze, selectedChannels));
             };
 
             const handleTenantClick = (tenantId) => {
                 const newTenantId = selectedTenant === tenantId ? null : tenantId;
                 setSelectedTenant(newTenantId);
-                setPromptText(generatePrompt(selectedPlatform, newTenantId, selectedRunbook));
+                setPromptText(generatePrompt(selectedPlatform, newTenantId, selectedRunbooks, selectedFreeze, selectedChannels));
             };
 
             const handleRunbookClick = (runbookId) => {
-                const newRunbookId = selectedRunbook === runbookId ? null : runbookId;
-                setSelectedRunbook(newRunbookId);
-                setPromptText(generatePrompt(selectedPlatform, selectedTenant, newRunbookId));
+                const newRunbooks = selectedRunbooks.includes(runbookId)
+                    ? selectedRunbooks.filter(id => id !== runbookId)
+                    : [...selectedRunbooks, runbookId];
+                setSelectedRunbooks(newRunbooks);
+                setPromptText(generatePrompt(selectedPlatform, selectedTenant, newRunbooks, selectedFreeze, selectedChannels));
+            };
+
+            const handleFreezeClick = (freezeId) => {
+                const newFreezeId = selectedFreeze === freezeId ? null : freezeId;
+                setSelectedFreeze(newFreezeId);
+                setPromptText(generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, newFreezeId, selectedChannels));
+            };
+
+            const handleChannelClick = (channelId) => {
+                const newChannels = selectedChannels.includes(channelId)
+                    ? selectedChannels.filter(id => id !== channelId)
+                    : [...selectedChannels, channelId];
+                setSelectedChannels(newChannels);
+                setPromptText(generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, selectedFreeze, newChannels));
             };
 
             return html`
@@ -153,11 +201,35 @@
                                 <th scope="row">Runbooks</th>
                                 ${runbooks.map(runbook => html`
                                     <td
-                                        class="text-center platform-cell ${selectedRunbook === runbook.id ? 'selected' : ''}"
+                                        class="text-center platform-cell ${selectedRunbooks.includes(runbook.id) ? 'selected' : ''}"
                                         onClick=${() => handleRunbookClick(runbook.id)}
                                     >
                                         ${runbook.name}<br/>
                                         <i class="${runbook.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">Freezes</th>
+                                ${freezes.map(freeze => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedFreeze === freeze.id ? 'selected' : ''}"
+                                        onClick=${() => handleFreezeClick(freeze.id)}
+                                    >
+                                        ${freeze.name}<br/>
+                                        <i class="${freeze.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">Channels</th>
+                                ${channels.map(channel => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedChannels.includes(channel.id) ? 'selected' : ''}"
+                                        onClick=${() => handleChannelClick(channel.id)}
+                                    >
+                                        ${channel.name}<br/>
+                                        <i class="${channel.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
