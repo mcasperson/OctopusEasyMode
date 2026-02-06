@@ -2,24 +2,17 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/mcasperson/OctopusEasyMode/internal/application"
 )
 
 func main() {
-	http.HandleFunc("/", handleRoot)
-	http.HandleFunc("/health", handleHealth)
+	r := gin.Default()
+
+	r.GET("/", application.PromptBuilderHandler)
 
 	port := ":8080"
-	fmt.Printf("Starting web server on port %s\n", port)
-	log.Fatal(http.ListenAndServe(port, nil))
-}
-
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to OctopusEasyMode!\n")
-}
-
-func handleHealth(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "OK\n")
+	fmt.Printf("Starting Gin web server on port %s\n", port)
+	r.Run(port)
 }

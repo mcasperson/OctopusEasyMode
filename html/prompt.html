@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Octopus Easy Mode</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .table td i {
+            margin-top: 1rem;
+        }
+        .table tbody tr {
+            border-top: 2rem solid transparent;
+        }
+        .table tbody tr:first-child {
+            border-top: none;
+        }
+        .table {
+            border-collapse: separate;
+            border-spacing: 0.5rem;
+        }
+        .platform-cell {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            padding: 1.5rem 1rem;
+            border-radius: 0.5rem;
+        }
+        .platform-cell:hover {
+            background-color: #f8f9fa;
+        }
+        .platform-cell.selected {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .platform-cell.selected i {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module">
+        import { h, render } from 'https://esm.sh/preact';
+        import { useState } from 'https://esm.sh/preact/hooks';
+        import htm from 'https://esm.sh/htm';
+        const html = htm.bind(h);
+
+        function App() {
+            const [selectedPlatform, setSelectedPlatform] = useState('kubernetes');
+            const [selectedTenant, setSelectedTenant] = useState(null);
+            const [selectedRunbook, setSelectedRunbook] = useState(null);
+            const [promptText, setPromptText] = useState('Create a Kubernetes project called "My K8s WebApp"');
+
+            const platforms = [
+                { id: 'kubernetes', name: 'Kubernetes', icon: 'fas fa-dharmachakra', prompt: 'Create a Kubernetes project called "My K8s WebApp"' },
+                { id: 'argocd', name: 'Argo CD', icon: 'fas fa-circle-nodes', prompt: 'Create an Argo CD project called "My Argo CD WebApp"' },
+                { id: 'azurewebapp', name: 'Azure Web App', icon: 'fab fa-microsoft', prompt: 'Create an Azure Web App project called "My Azure WebApp"' },
+                { id: 'azurefunctions', name: 'Azure Functions', icon: 'fas fa-bolt', prompt: 'Create an Azure Functions project called "My Azure Function App"' },
+                { id: 'awslambda', name: 'AWS Lambda', icon: 'fab fa-aws', prompt: 'Create an AWS Lambda project called "My AWS Lambda App"' },
+                { id: 'scriptstep', name: 'Script Step', icon: 'fas fa-terminal', prompt: 'Create a script project called "My Script App"' }
+            ];
+
+            const tenants = [
+                { id: 'regional', name: 'Regional', icon: 'fas fa-globe', instruction: '* Add 5 tenants based on geographical regions' },
+                { id: 'physical', name: 'Physical', icon: 'fas fa-building', instruction: '* Add 5 tenants based on random brick and mortar store names' },
+                { id: 'businessunit', name: 'Business Unit', icon: 'fas fa-sitemap', instruction: '* Add 5 tenants based on random business unit names' },
+                { id: 'company', name: 'Company', icon: 'fas fa-briefcase', instruction: '* Add 5 tenants based on fictional company names' }
+            ];
+
+            const runbooks = [
+                { id: 'database', name: 'Database', icon: 'fas fa-database', instruction: '* Add a runbook to simulate a database backup' },
+                { id: 'service', name: 'Service', icon: 'fas fa-cogs', instruction: '* Add a runbook to simulate the restart of the service' },
+                { id: 'logs', name: 'Logs', icon: 'fas fa-file-alt', instruction: '* Add a runbook to simulate the retrival of logs' }
+            ];
+
+            const generatePrompt = (platformId, tenantId, runbookId) => {
+                const platform = platforms.find(p => p.id === platformId);
+                if (!platform) return '';
+
+                let prompt = platform.prompt;
+                const additionalInstructions = [];
+
+                if (tenantId) {
+                    const tenant = tenants.find(t => t.id === tenantId);
+                    if (tenant && tenant.instruction) {
+                        additionalInstructions.push(tenant.instruction);
+                    }
+                }
+
+                if (runbookId) {
+                    const runbook = runbooks.find(r => r.id === runbookId);
+                    if (runbook && runbook.instruction) {
+                        additionalInstructions.push(runbook.instruction);
+                    }
+                }
+
+                if (additionalInstructions.length > 0) {
+                    prompt += ', and then:\n' + additionalInstructions.join('\n');
+                }
+
+                return prompt;
+            };
+
+            const handlePlatformClick = (platformId) => {
+                if (selectedPlatform === platformId) return;
+                setSelectedPlatform(platformId);
+                setPromptText(generatePrompt(platformId, selectedTenant, selectedRunbook));
+            };
+
+            const handleTenantClick = (tenantId) => {
+                const newTenantId = selectedTenant === tenantId ? null : tenantId;
+                setSelectedTenant(newTenantId);
+                setPromptText(generatePrompt(selectedPlatform, newTenantId, selectedRunbook));
+            };
+
+            const handleRunbookClick = (runbookId) => {
+                const newRunbookId = selectedRunbook === runbookId ? null : runbookId;
+                setSelectedRunbook(newRunbookId);
+                setPromptText(generatePrompt(selectedPlatform, selectedTenant, newRunbookId));
+            };
+
+            return html`
+                <div class="container mt-5">
+                    <h1 class="mb-4">Octopus Easy Mode</h1>
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Platform</th>
+                                ${platforms.map(platform => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedPlatform === platform.id ? 'selected' : ''}"
+                                        onClick=${() => handlePlatformClick(platform.id)}
+                                    >
+                                        ${platform.name}<br/>
+                                        <i class="${platform.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">Tenants</th>
+                                ${tenants.map(tenant => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedTenant === tenant.id ? 'selected' : ''}"
+                                        onClick=${() => handleTenantClick(tenant.id)}
+                                    >
+                                        ${tenant.name}<br/>
+                                        <i class="${tenant.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">Runbooks</th>
+                                ${runbooks.map(runbook => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedRunbook === runbook.id ? 'selected' : ''}"
+                                        onClick=${() => handleRunbookClick(runbook.id)}
+                                    >
+                                        ${runbook.name}<br/>
+                                        <i class="${runbook.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                    <div class="mt-4">
+                        <h3>Prompt</h3>
+                        <textarea
+                            class="form-control"
+                            rows="10"
+                            placeholder="Enter your prompt here..."
+                            value=${promptText}
+                            onInput=${(e) => setPromptText(e.target.value)}
+                        ></textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+        render(html`<${App} />`, document.getElementById('app'));
+    </script>
+</body>
+</html>
+
