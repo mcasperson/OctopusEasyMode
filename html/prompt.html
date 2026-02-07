@@ -19,6 +19,13 @@
         .table {
             border-collapse: separate;
             border-spacing: 0.5rem;
+            table-layout: fixed;
+        }
+        .table th {
+            width: 150px;
+        }
+        .table td {
+            width: auto;
         }
         .platform-cell {
             cursor: pointer;
@@ -42,17 +49,28 @@
     <div id="app"></div>
     <script type="module">
         import { h, render } from 'https://esm.sh/preact';
-        import { useState } from 'https://esm.sh/preact/hooks';
+        import { useState, useEffect } from 'https://esm.sh/preact/hooks';
         import htm from 'https://esm.sh/htm';
         const html = htm.bind(h);
 
         function App() {
-            const [selectedPlatform, setSelectedPlatform] = useState('kubernetes');
-            const [selectedTenant, setSelectedTenant] = useState(null);
-            const [selectedRunbooks, setSelectedRunbooks] = useState([]);
-            const [selectedFreeze, setSelectedFreeze] = useState(null);
-            const [selectedChannels, setSelectedChannels] = useState([]);
-            const [promptText, setPromptText] = useState('Create a Kubernetes project called "My K8s WebApp"');
+            // Load initial state from localStorage or use defaults
+            const loadFromStorage = (key, defaultValue) => {
+                try {
+                    const saved = localStorage.getItem(key);
+                    return saved !== null ? JSON.parse(saved) : defaultValue;
+                } catch (e) {
+                    console.error('Error loading from localStorage:', e);
+                    return defaultValue;
+                }
+            };
+
+            const [selectedPlatform, setSelectedPlatform] = useState(() => loadFromStorage('selectedPlatform', 'kubernetes'));
+            const [selectedTenant, setSelectedTenant] = useState(() => loadFromStorage('selectedTenant', null));
+            const [selectedRunbooks, setSelectedRunbooks] = useState(() => loadFromStorage('selectedRunbooks', []));
+            const [selectedFreeze, setSelectedFreeze] = useState(() => loadFromStorage('selectedFreeze', null));
+            const [selectedChannels, setSelectedChannels] = useState(() => loadFromStorage('selectedChannels', []));
+            const [promptText, setPromptText] = useState('');
 
             const platforms = [
                 { id: 'kubernetes', name: 'Kubernetes', icon: 'fas fa-dharmachakra', prompt: 'Create a Kubernetes project called "My K8s WebApp"' },
@@ -64,10 +82,10 @@
             ];
 
             const tenants = [
-                { id: 'regional', name: 'Regional', icon: 'fas fa-globe', instruction: '* Add 5 tenants based on geographical regions' },
-                { id: 'physical', name: 'Physical', icon: 'fas fa-building', instruction: '* Add 5 tenants based on random brick and mortar store names' },
-                { id: 'businessunit', name: 'Business Unit', icon: 'fas fa-sitemap', instruction: '* Add 5 tenants based on random business unit names' },
-                { id: 'company', name: 'Company', icon: 'fas fa-briefcase', instruction: '* Add 5 tenants based on fictional company names' }
+                { id: 'regional', name: 'Regional', icon: 'fas fa-globe', instruction: '* Add 5 tenants based on geographical regions, link the tenants to the project, and require tenants to deploy the project' },
+                { id: 'physical', name: 'Physical', icon: 'fas fa-building', instruction: '* Add 5 tenants based on random brick and mortar store names, link the tenants to the project, and require tenants to deploy the project' },
+                { id: 'businessunit', name: 'Business Unit', icon: 'fas fa-sitemap', instruction: '* Add 5 tenants based on random business unit names, link the tenants to the project, and require tenants to deploy the project' },
+                { id: 'company', name: 'Company', icon: 'fas fa-briefcase', instruction: '* Add 5 tenants based on fictional company names, link the tenants to the project, and require tenants to deploy the project' }
             ];
 
             const runbooks = [
@@ -87,6 +105,33 @@
                 { id: 'hotfix', name: 'Hot Fix', icon: 'fas fa-fire-extinguisher', instruction: '* Create a Hot Fix channel' },
                 { id: 'featurebranch', name: 'Feature Branch', icon: 'fas fa-code-branch', instruction: '* Create a Feature Branch channel' }
             ];
+
+            // Save to localStorage whenever selections change
+            useEffect(() => {
+                localStorage.setItem('selectedPlatform', JSON.stringify(selectedPlatform));
+            }, [selectedPlatform]);
+
+            useEffect(() => {
+                localStorage.setItem('selectedTenant', JSON.stringify(selectedTenant));
+            }, [selectedTenant]);
+
+            useEffect(() => {
+                localStorage.setItem('selectedRunbooks', JSON.stringify(selectedRunbooks));
+            }, [selectedRunbooks]);
+
+            useEffect(() => {
+                localStorage.setItem('selectedFreeze', JSON.stringify(selectedFreeze));
+            }, [selectedFreeze]);
+
+            useEffect(() => {
+                localStorage.setItem('selectedChannels', JSON.stringify(selectedChannels));
+            }, [selectedChannels]);
+
+            // Generate prompt on initial load and when selections change
+            useEffect(() => {
+                const prompt = generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, selectedFreeze, selectedChannels);
+                setPromptText(prompt);
+            }, [selectedPlatform, selectedTenant, selectedRunbooks, selectedFreeze, selectedChannels]);
 
             const generatePrompt = (platformId, tenantId, runbookIds, freezeId, channelIds) => {
                 const platform = platforms.find(p => p.id === platformId);
@@ -137,13 +182,11 @@
             const handlePlatformClick = (platformId) => {
                 if (selectedPlatform === platformId) return;
                 setSelectedPlatform(platformId);
-                setPromptText(generatePrompt(platformId, selectedTenant, selectedRunbooks, selectedFreeze, selectedChannels));
             };
 
             const handleTenantClick = (tenantId) => {
                 const newTenantId = selectedTenant === tenantId ? null : tenantId;
                 setSelectedTenant(newTenantId);
-                setPromptText(generatePrompt(selectedPlatform, newTenantId, selectedRunbooks, selectedFreeze, selectedChannels));
             };
 
             const handleRunbookClick = (runbookId) => {
@@ -151,13 +194,11 @@
                     ? selectedRunbooks.filter(id => id !== runbookId)
                     : [...selectedRunbooks, runbookId];
                 setSelectedRunbooks(newRunbooks);
-                setPromptText(generatePrompt(selectedPlatform, selectedTenant, newRunbooks, selectedFreeze, selectedChannels));
             };
 
             const handleFreezeClick = (freezeId) => {
                 const newFreezeId = selectedFreeze === freezeId ? null : freezeId;
                 setSelectedFreeze(newFreezeId);
-                setPromptText(generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, newFreezeId, selectedChannels));
             };
 
             const handleChannelClick = (channelId) => {
@@ -165,7 +206,6 @@
                     ? selectedChannels.filter(id => id !== channelId)
                     : [...selectedChannels, channelId];
                 setSelectedChannels(newChannels);
-                setPromptText(generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, selectedFreeze, newChannels));
             };
 
             const handleCopyToClipboard = () => {
