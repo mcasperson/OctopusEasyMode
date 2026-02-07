@@ -68,7 +68,6 @@
             const [selectedPlatform, setSelectedPlatform] = useState(() => loadFromStorage('selectedPlatform', 'kubernetes'));
             const [selectedTenant, setSelectedTenant] = useState(() => loadFromStorage('selectedTenant', null));
             const [selectedRunbooks, setSelectedRunbooks] = useState(() => loadFromStorage('selectedRunbooks', []));
-            const [selectedFreeze, setSelectedFreeze] = useState(() => loadFromStorage('selectedFreeze', null));
             const [selectedChannels, setSelectedChannels] = useState(() => loadFromStorage('selectedChannels', []));
             const [promptText, setPromptText] = useState('');
 
@@ -91,15 +90,9 @@
             const runbooks = [
                 { id: 'database', name: 'Database', icon: 'fas fa-database', instruction: '* Add a runbook to simulate a database backup' },
                 { id: 'service', name: 'Service', icon: 'fas fa-cogs', instruction: '* Add a runbook to simulate the restart of the service' },
-                { id: 'logs', name: 'Logs', icon: 'fas fa-file-alt', instruction: '* Add a runbook to simulate the retrival of logs' }
+                { id: 'logs', name: 'Logs', icon: 'fas fa-file-alt', instruction: '* Add a runbook to simulate the retrieval of logs' }
             ];
 
-            const freezes = [
-                { id: 'christmas', name: 'Christmas', icon: 'fas fa-tree', instruction: '* Create a global freeze for Christmas' },
-                { id: 'newyear', name: 'New Year', icon: 'fas fa-champagne-glasses', instruction: '* Create a global freeze for New Year' },
-                { id: 'blackfriday', name: 'Black Friday', icon: 'fas fa-tag', instruction: '* Create a global freeze for Black Friday' },
-                { id: 'cybermonday', name: 'Cyber Monday', icon: 'fas fa-laptop', instruction: '* Create a global freeze for Cyber Monday' }
-            ];
 
             const channels = [
                 { id: 'hotfix', name: 'Hot Fix', icon: 'fas fa-fire-extinguisher', instruction: '* Create a Hot Fix channel' },
@@ -120,20 +113,16 @@
             }, [selectedRunbooks]);
 
             useEffect(() => {
-                localStorage.setItem('selectedFreeze', JSON.stringify(selectedFreeze));
-            }, [selectedFreeze]);
-
-            useEffect(() => {
                 localStorage.setItem('selectedChannels', JSON.stringify(selectedChannels));
             }, [selectedChannels]);
 
             // Generate prompt on initial load and when selections change
             useEffect(() => {
-                const prompt = generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, selectedFreeze, selectedChannels);
+                const prompt = generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, selectedChannels);
                 setPromptText(prompt);
-            }, [selectedPlatform, selectedTenant, selectedRunbooks, selectedFreeze, selectedChannels]);
+            }, [selectedPlatform, selectedTenant, selectedRunbooks, selectedChannels]);
 
-            const generatePrompt = (platformId, tenantId, runbookIds, freezeId, channelIds) => {
+            const generatePrompt = (platformId, tenantId, runbookIds, channelIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
 
@@ -156,12 +145,6 @@
                     });
                 }
 
-                if (freezeId) {
-                    const freeze = freezes.find(f => f.id === freezeId);
-                    if (freeze && freeze.instruction) {
-                        additionalInstructions.push(freeze.instruction);
-                    }
-                }
 
                 if (channelIds && channelIds.length > 0) {
                     channelIds.forEach(channelId => {
@@ -196,10 +179,6 @@
                 setSelectedRunbooks(newRunbooks);
             };
 
-            const handleFreezeClick = (freezeId) => {
-                const newFreezeId = selectedFreeze === freezeId ? null : freezeId;
-                setSelectedFreeze(newFreezeId);
-            };
 
             const handleChannelClick = (channelId) => {
                 const newChannels = selectedChannels.includes(channelId)
@@ -254,18 +233,6 @@
                                     >
                                         ${runbook.name}<br/>
                                         <i class="${runbook.icon} fa-2x"></i>
-                                    </td>
-                                `)}
-                            </tr>
-                            <tr>
-                                <th scope="row">Freezes</th>
-                                ${freezes.map(freeze => html`
-                                    <td
-                                        class="text-center platform-cell ${selectedFreeze === freeze.id ? 'selected' : ''}"
-                                        onClick=${() => handleFreezeClick(freeze.id)}
-                                    >
-                                        ${freeze.name}<br/>
-                                        <i class="${freeze.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
