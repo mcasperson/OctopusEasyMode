@@ -43,6 +43,11 @@
         .platform-cell.selected i {
             color: white;
         }
+        .platform-cell.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
         .copy-btn {
             min-width: 200px;
         }
@@ -126,6 +131,21 @@
                 setPromptText(prompt);
             }, [selectedPlatform, selectedTenant, selectedRunbooks, selectedChannels]);
 
+            // Check if runbooks and channels should be disabled
+            const isRunbooksChannelsDisabled = selectedPlatform === 'kubernetes' && selectedTenant !== null;
+
+            // Clear runbooks and channels when they become disabled
+            useEffect(() => {
+                if (isRunbooksChannelsDisabled) {
+                    if (selectedRunbooks.length > 0) {
+                        setSelectedRunbooks([]);
+                    }
+                    if (selectedChannels.length > 0) {
+                        setSelectedChannels([]);
+                    }
+                }
+            }, [isRunbooksChannelsDisabled]);
+
             const generatePrompt = (platformId, tenantId, runbookIds, channelIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
@@ -182,6 +202,7 @@
             };
 
             const handleRunbookClick = (runbookId) => {
+                if (isRunbooksChannelsDisabled) return;
                 const newRunbooks = selectedRunbooks.includes(runbookId)
                     ? selectedRunbooks.filter(id => id !== runbookId)
                     : [...selectedRunbooks, runbookId];
@@ -190,6 +211,7 @@
 
 
             const handleChannelClick = (channelId) => {
+                if (isRunbooksChannelsDisabled) return;
                 const newChannels = selectedChannels.includes(channelId)
                     ? selectedChannels.filter(id => id !== channelId)
                     : [...selectedChannels, channelId];
@@ -240,7 +262,7 @@
                                 <th scope="row">Runbooks</th>
                                 ${runbooks.map(runbook => html`
                                     <td
-                                        class="text-center platform-cell ${selectedRunbooks.includes(runbook.id) ? 'selected' : ''}"
+                                        class="text-center platform-cell ${selectedRunbooks.includes(runbook.id) ? 'selected' : ''} ${isRunbooksChannelsDisabled ? 'disabled' : ''}"
                                         onClick=${() => handleRunbookClick(runbook.id)}
                                     >
                                         ${runbook.name}<br/>
@@ -252,7 +274,7 @@
                                 <th scope="row">Channels</th>
                                 ${channels.map(channel => html`
                                     <td
-                                        class="text-center platform-cell ${selectedChannels.includes(channel.id) ? 'selected' : ''}"
+                                        class="text-center platform-cell ${selectedChannels.includes(channel.id) ? 'selected' : ''} ${isRunbooksChannelsDisabled ? 'disabled' : ''}"
                                         onClick=${() => handleChannelClick(channel.id)}
                                     >
                                         ${channel.name}<br/>
