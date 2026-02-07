@@ -48,6 +48,12 @@
             cursor: not-allowed;
             pointer-events: none;
         }
+        .disabled-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            font-style: italic;
+            margin-top: 0.25rem;
+        }
         .copy-btn {
             min-width: 200px;
         }
@@ -90,10 +96,10 @@
             ];
 
             const tenants = [
-                { id: 'regional', name: 'Regional', icon: 'fas fa-globe', instruction: '* Add 3 tenants based on geographical regions, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
-                { id: 'physical', name: 'Physical', icon: 'fas fa-building', instruction: '* Add 3 tenants based on random brick and mortar store names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
-                { id: 'businessunit', name: 'Business Unit', icon: 'fas fa-sitemap', instruction: '* Add 3 tenants based on random business unit names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
-                { id: 'company', name: 'Company', icon: 'fas fa-briefcase', instruction: '* Add 3 tenants based on fictional company names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' }
+                { id: 'regional', name: 'Regional', icon: 'fas fa-globe', instruction: '* Add 5 tenants based on geographical regions, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
+                { id: 'physical', name: 'Physical', icon: 'fas fa-building', instruction: '* Add 5 tenants based on random brick and mortar store names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
+                { id: 'businessunit', name: 'Business Unit', icon: 'fas fa-sitemap', instruction: '* Add 5 tenants based on random business unit names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
+                { id: 'company', name: 'Company', icon: 'fas fa-briefcase', instruction: '* Add 5 tenants based on fictional company names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' }
             ];
 
             const runbooks = [
@@ -259,7 +265,10 @@
                                 `)}
                             </tr>
                             <tr>
-                                <th scope="row">Runbooks</th>
+                                <th scope="row">
+                                    Runbooks
+                                    ${isRunbooksChannelsDisabled && html`<div class="disabled-message">Prompt complexity limit reached</div>`}
+                                </th>
                                 ${runbooks.map(runbook => html`
                                     <td
                                         class="text-center platform-cell ${selectedRunbooks.includes(runbook.id) ? 'selected' : ''} ${isRunbooksChannelsDisabled ? 'disabled' : ''}"
@@ -271,7 +280,10 @@
                                 `)}
                             </tr>
                             <tr>
-                                <th scope="row">Channels</th>
+                                <th scope="row">
+                                    Channels
+                                    ${isRunbooksChannelsDisabled && html`<div class="disabled-message">Prompt complexity limit reached</div>`}
+                                </th>
                                 ${channels.map(channel => html`
                                     <td
                                         class="text-center platform-cell ${selectedChannels.includes(channel.id) ? 'selected' : ''} ${isRunbooksChannelsDisabled ? 'disabled' : ''}"
