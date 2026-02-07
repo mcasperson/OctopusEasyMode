@@ -96,10 +96,10 @@
             ];
 
             const tenants = [
-                { id: 'regional', name: 'Regional', icon: 'fas fa-globe', instruction: '* Add 5 tenants based on geographical regions, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
-                { id: 'physical', name: 'Physical', icon: 'fas fa-building', instruction: '* Add 5 tenants based on random brick and mortar store names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
-                { id: 'businessunit', name: 'Business Unit', icon: 'fas fa-sitemap', instruction: '* Add 5 tenants based on random business unit names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' },
-                { id: 'company', name: 'Company', icon: 'fas fa-briefcase', instruction: '* Add 5 tenants based on fictional company names, link the tenants to the project, and require tenants to deploy the project. Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.' }
+                { id: 'regional', name: 'Regional', icon: 'fas fa-globe', instruction: '* Add 5 tenants based on geographical regions, link the tenants to the project, and require tenants to deploy the project.' },
+                { id: 'physical', name: 'Physical', icon: 'fas fa-building', instruction: '* Add 5 tenants based on random brick and mortar store names, link the tenants to the project, and require tenants to deploy the project.' },
+                { id: 'businessunit', name: 'Business Unit', icon: 'fas fa-sitemap', instruction: '* Add 5 tenants based on random business unit names, link the tenants to the project, and require tenants to deploy the project.' },
+                { id: 'company', name: 'Company', icon: 'fas fa-briefcase', instruction: '* Add 5 tenants based on fictional company names, link the tenants to the project, and require tenants to deploy the project.' }
             ];
 
             const runbooks = [
@@ -163,6 +163,10 @@
                     const tenant = tenants.find(t => t.id === tenantId);
                     if (tenant && tenant.instruction) {
                         additionalInstructions.push(tenant.instruction);
+                        // Only add this message for Kubernetes platform
+                        if (platformId === 'kubernetes') {
+                            additionalInstructions.push('* Configure all targets, accounts, and certificates to support tenanted and untenanted deployments. Link the tenants to all targets, accounts, and certificates.');
+                        }
                     }
                 }
 
