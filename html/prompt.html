@@ -80,6 +80,7 @@
             };
 
             const [selectedPlatform, setSelectedPlatform] = useState(() => loadFromStorage('selectedPlatform', 'kubernetes'));
+            const [selectedExampleSteps, setSelectedExampleSteps] = useState(() => loadFromStorage('selectedExampleSteps', []));
             const [selectedTenant, setSelectedTenant] = useState(() => loadFromStorage('selectedTenant', null));
             const [selectedRunbooks, setSelectedRunbooks] = useState(() => loadFromStorage('selectedRunbooks', []));
             const [selectedChannels, setSelectedChannels] = useState(() => loadFromStorage('selectedChannels', []));
@@ -93,6 +94,13 @@
                 { id: 'azurefunctions', name: 'Azure Functions', icon: 'fas fa-bolt', prompt: 'Create an Azure Functions project called "My Azure Function App"' },
                 { id: 'awslambda', name: 'AWS Lambda', icon: 'fab fa-aws', prompt: 'Create an AWS Lambda project called "My AWS Lambda App"' },
                 { id: 'scriptstep', name: 'Script Step', icon: 'fas fa-terminal', prompt: 'Create a script project called "My Script App"' }
+            ];
+
+            const exampleSteps = [
+                { id: 'smoketests', name: 'Smoke Tests', icon: 'fas fa-vial', instruction: '* Add a step to run smoke tests.' },
+                { id: 'slacknotification', name: 'Slack Notification', icon: 'fab fa-slack', instruction: '* Add a step to send a Slack notification.' },
+                { id: 'openfirewall', name: 'Open Firewall', icon: 'fas fa-shield-alt', instruction: '* Add a step to open the firewall.' },
+                { id: 'publishreleasenotes', name: 'Publish Release Notes', icon: 'fas fa-sticky-note', instruction: '* Add a step to publish release notes.' }
             ];
 
             const tenants = [
@@ -120,6 +128,10 @@
             }, [selectedPlatform]);
 
             useEffect(() => {
+                localStorage.setItem('selectedExampleSteps', JSON.stringify(selectedExampleSteps));
+            }, [selectedExampleSteps]);
+
+            useEffect(() => {
                 localStorage.setItem('selectedTenant', JSON.stringify(selectedTenant));
             }, [selectedTenant]);
 
@@ -133,9 +145,9 @@
 
             // Generate prompt on initial load and when selections change
             useEffect(() => {
-                const prompt = generatePrompt(selectedPlatform, selectedTenant, selectedRunbooks, selectedChannels);
+                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels);
                 setPromptText(prompt);
-            }, [selectedPlatform, selectedTenant, selectedRunbooks, selectedChannels]);
+            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels]);
 
             // Check if runbooks and channels should be disabled
             const isRunbooksChannelsDisabled = selectedPlatform === 'kubernetes' && selectedTenant !== null;
@@ -152,12 +164,21 @@
                 }
             }, [isRunbooksChannelsDisabled]);
 
-            const generatePrompt = (platformId, tenantId, runbookIds, channelIds) => {
+            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
 
                 let prompt = platform.prompt;
                 const additionalInstructions = [];
+
+                if (exampleStepsIds && exampleStepsIds.length > 0) {
+                    exampleStepsIds.forEach(stepId => {
+                        const step = exampleSteps.find(s => s.id === stepId);
+                        if (step && step.instruction) {
+                            additionalInstructions.push(step.instruction);
+                        }
+                    });
+                }
 
                 if (tenantId) {
                     const tenant = tenants.find(t => t.id === tenantId);
@@ -204,6 +225,13 @@
             const handlePlatformClick = (platformId) => {
                 if (selectedPlatform === platformId) return;
                 setSelectedPlatform(platformId);
+            };
+
+            const handleExampleStepClick = (stepId) => {
+                const newSteps = selectedExampleSteps.includes(stepId)
+                    ? selectedExampleSteps.filter(id => id !== stepId)
+                    : [...selectedExampleSteps, stepId];
+                setSelectedExampleSteps(newSteps);
             };
 
             const handleTenantClick = (tenantId) => {
@@ -253,6 +281,18 @@
                                     >
                                         ${platform.name}<br/>
                                         <i class="${platform.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">Example Steps</th>
+                                ${exampleSteps.map(step => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedExampleSteps.includes(step.id) ? 'selected' : ''}"
+                                        onClick=${() => handleExampleStepClick(step.id)}
+                                    >
+                                        ${step.name}<br/>
+                                        <i class="${step.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
