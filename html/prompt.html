@@ -288,6 +288,9 @@
                     <table class="table">
                         <tbody>
                             <tr>
+                                <td colspan="8" class="text-center" style="font-size: 1.5rem; font-weight: 600; border-bottom-width: 0; padding: 32px">1. Select Platform</td>
+                            </tr>
+                            <tr>
                                 <th scope="row">Platform</th>
                                 ${platforms.map(platform => html`
                                     <td
@@ -300,7 +303,7 @@
                                 `)}
                             </tr>
                             <tr>
-                                <td colspan="8" class="text-center" style="font-size: 1.5rem; font-weight: 600; border-bottom-width: 0; padding: 32px">Select Tenants</td>
+                                <td colspan="8" class="text-center" style="font-size: 1.5rem; font-weight: 600; border-bottom-width: 0; padding: 32px">2. Select Tenants</td>
                             </tr>
                             <tr>
                                 <th scope="row">Tenants</th>
@@ -316,7 +319,7 @@
                             </tr>
                             <tr class="header-text-row">
                                 <td colspan="8" class="text-center" style="font-size: 1.5rem; font-weight: 600; border-bottom-width: 0; padding: 32px">
-                                    Or Select Features
+                                    3. Or Select Features
                                     ${isFeaturesDisabled && html`<div class="disabled-message" style="font-size: 1rem; margin-top: 0.5rem; color: #dc3545;">Prompt complexity limit reached. Disable tenants to select additional features.</div>`}
                                 </td>
                             </tr>
