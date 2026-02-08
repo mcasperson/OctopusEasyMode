@@ -244,8 +244,8 @@
             const handleExampleStepClick = (stepId) => {
                 if (isFeaturesDisabled) return;
                 const newSteps = selectedExampleSteps.includes(stepId)
-                    ? selectedExampleSteps.filter(id => id !== stepId)
-                    : [...selectedExampleSteps, stepId];
+                    ? []
+                    : [stepId];
                 setSelectedExampleSteps(newSteps);
             };
 
@@ -257,8 +257,8 @@
             const handleRunbookClick = (runbookId) => {
                 if (isFeaturesDisabled) return;
                 const newRunbooks = selectedRunbooks.includes(runbookId)
-                    ? selectedRunbooks.filter(id => id !== runbookId)
-                    : [...selectedRunbooks, runbookId];
+                    ? []
+                    : [runbookId];
                 setSelectedRunbooks(newRunbooks);
             };
 
@@ -266,8 +266,8 @@
             const handleChannelClick = (channelId) => {
                 if (isFeaturesDisabled) return;
                 const newChannels = selectedChannels.includes(channelId)
-                    ? selectedChannels.filter(id => id !== channelId)
-                    : [...selectedChannels, channelId];
+                    ? []
+                    : [channelId];
                 setSelectedChannels(newChannels);
             };
 
