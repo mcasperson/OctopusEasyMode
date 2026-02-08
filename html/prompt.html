@@ -311,7 +311,7 @@
                             <tr>
                                 <th scope="row">
                                     Runbooks
-                                    ${isRunbooksChannelsDisabled && html`<div class="disabled-message">Prompt complexity limit reached</div>`}
+                                    ${isRunbooksChannelsDisabled && html`<div class="disabled-message">Prompt complexity limit reached. Disable tenants to select these features.</div>`}
                                 </th>
                                 ${runbooks.map(runbook => html`
                                     <td
