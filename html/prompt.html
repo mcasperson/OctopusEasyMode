@@ -153,9 +153,11 @@
                 setPromptText(prompt);
             }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels]);
 
-            // Check if features should be disabled when a tenant is selected OR when 3 features are selected
+            // Check if features should be disabled when a tenant is selected OR when feature limit is reached
+            // Feature limit depends on platform: Script Step and Blue/Green allow 4, others allow 1
             const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length;
-            const isFeaturesDisabled = selectedTenant !== null || totalFeaturesSelected >= 3;
+            const featureLimit = (selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') ? 4 : 1;
+            const isFeaturesDisabled = selectedTenant !== null || totalFeaturesSelected >= featureLimit;
 
             // Clear features when a tenant is selected
             useEffect(() => {
@@ -325,7 +327,7 @@
                                 <td colspan="8" class="text-center" style="font-size: 1.5rem; font-weight: 600; border-bottom-width: 0; padding: 32px">
                                     3. Or Select Features
                                     ${isFeaturesDisabled && selectedTenant !== null && html`<div class="disabled-message" style="font-size: 1rem; margin-top: 0.5rem; color: #dc3545;">Prompt complexity limit reached. Disable tenants to select additional features.</div>`}
-                                    ${isFeaturesDisabled && selectedTenant === null && totalFeaturesSelected >= 3 && html`<div class="disabled-message" style="font-size: 1rem; margin-top: 0.5rem; color: #dc3545;">Prompt complexity limit reached. Maximum 3 features can be selected.</div>`}
+                                    ${isFeaturesDisabled && selectedTenant === null && totalFeaturesSelected >= featureLimit && html`<div class="disabled-message" style="font-size: 1rem; margin-top: 0.5rem; color: #dc3545;">Prompt complexity limit reached. Maximum ${featureLimit} feature${featureLimit > 1 ? 's' : ''} can be selected.</div>`}
                                 </td>
                             </tr>
                             <tr>
