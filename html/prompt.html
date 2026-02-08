@@ -151,8 +151,9 @@
                 setPromptText(prompt);
             }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels]);
 
-            // Check if runbooks and channels should be disabled
-            const isRunbooksChannelsDisabled = selectedPlatform === 'kubernetes' && selectedTenant !== null;
+            // Check if runbooks, channels, and example steps should be disabled when tenants are selected
+            const isRunbooksChannelsDisabled = selectedTenant !== null;
+            const isExampleStepsDisabled = selectedTenant !== null;
 
             // Clear runbooks and channels when they become disabled
             useEffect(() => {
@@ -165,6 +166,13 @@
                     }
                 }
             }, [isRunbooksChannelsDisabled]);
+
+            // Clear example steps when they become disabled
+            useEffect(() => {
+                if (isExampleStepsDisabled && selectedExampleSteps.length > 0) {
+                    setSelectedExampleSteps([]);
+                }
+            }, [isExampleStepsDisabled]);
 
             // Clear manual intervention when platform is not scriptstep
             useEffect(() => {
@@ -237,6 +245,7 @@
             };
 
             const handleExampleStepClick = (stepId) => {
+                if (isExampleStepsDisabled) return;
                 const newSteps = selectedExampleSteps.includes(stepId)
                     ? selectedExampleSteps.filter(id => id !== stepId)
                     : [...selectedExampleSteps, stepId];
@@ -294,18 +303,6 @@
                                 `)}
                             </tr>
                             <tr>
-                                <th scope="row">Example Steps</th>
-                                ${exampleSteps.filter(step => !step.platforms || step.platforms.includes(selectedPlatform)).map(step => html`
-                                    <td
-                                        class="text-center platform-cell ${selectedExampleSteps.includes(step.id) ? 'selected' : ''}"
-                                        onClick=${() => handleExampleStepClick(step.id)}
-                                    >
-                                        ${step.name}<br/>
-                                        <i class="${step.icon} fa-2x"></i>
-                                    </td>
-                                `)}
-                            </tr>
-                            <tr>
                                 <th scope="row">Tenants</th>
                                 ${tenants.map(tenant => html`
                                     <td
@@ -314,6 +311,21 @@
                                     >
                                         ${tenant.name}<br/>
                                         <i class="${tenant.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    Example Steps
+                                    ${isExampleStepsDisabled && html`<div class="disabled-message">Prompt complexity limit reached. Disable tenants to select these features.</div>`}
+                                </th>
+                                ${exampleSteps.filter(step => !step.platforms || step.platforms.includes(selectedPlatform)).map(step => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedExampleSteps.includes(step.id) ? 'selected' : ''} ${isExampleStepsDisabled ? 'disabled' : ''}"
+                                        onClick=${() => handleExampleStepClick(step.id)}
+                                    >
+                                        ${step.name}<br/>
+                                        <i class="${step.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
