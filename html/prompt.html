@@ -23,9 +23,11 @@
         }
         .table th {
             width: 150px;
+            border-width: 0;
         }
         .table td {
             width: auto;
+            border-width: 0;
         }
         .platform-cell {
             cursor: pointer;
@@ -151,13 +153,15 @@
                 setPromptText(prompt);
             }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels]);
 
-            // Check if runbooks, channels, and example steps should be disabled when tenants are selected
-            const isRunbooksChannelsDisabled = selectedTenant !== null;
-            const isExampleStepsDisabled = selectedTenant !== null;
+            // Check if features should be disabled when a tenant is selected
+            const isFeaturesDisabled = selectedTenant !== null;
 
-            // Clear runbooks and channels when they become disabled
+            // Clear features when they become disabled
             useEffect(() => {
-                if (isRunbooksChannelsDisabled) {
+                if (isFeaturesDisabled) {
+                    if (selectedExampleSteps.length > 0) {
+                        setSelectedExampleSteps([]);
+                    }
                     if (selectedRunbooks.length > 0) {
                         setSelectedRunbooks([]);
                     }
@@ -165,14 +169,7 @@
                         setSelectedChannels([]);
                     }
                 }
-            }, [isRunbooksChannelsDisabled]);
-
-            // Clear example steps when they become disabled
-            useEffect(() => {
-                if (isExampleStepsDisabled && selectedExampleSteps.length > 0) {
-                    setSelectedExampleSteps([]);
-                }
-            }, [isExampleStepsDisabled]);
+            }, [isFeaturesDisabled]);
 
             // Clear manual intervention when platform is not scriptstep
             useEffect(() => {
@@ -245,7 +242,7 @@
             };
 
             const handleExampleStepClick = (stepId) => {
-                if (isExampleStepsDisabled) return;
+                if (isFeaturesDisabled) return;
                 const newSteps = selectedExampleSteps.includes(stepId)
                     ? selectedExampleSteps.filter(id => id !== stepId)
                     : [...selectedExampleSteps, stepId];
@@ -258,7 +255,7 @@
             };
 
             const handleRunbookClick = (runbookId) => {
-                if (isRunbooksChannelsDisabled) return;
+                if (isFeaturesDisabled) return;
                 const newRunbooks = selectedRunbooks.includes(runbookId)
                     ? selectedRunbooks.filter(id => id !== runbookId)
                     : [...selectedRunbooks, runbookId];
@@ -267,7 +264,7 @@
 
 
             const handleChannelClick = (channelId) => {
-                if (isRunbooksChannelsDisabled) return;
+                if (isFeaturesDisabled) return;
                 const newChannels = selectedChannels.includes(channelId)
                     ? selectedChannels.filter(id => id !== channelId)
                     : [...selectedChannels, channelId];
@@ -303,6 +300,9 @@
                                 `)}
                             </tr>
                             <tr>
+                                <td colspan="8" class="text-center" style="font-size: 1.5rem; font-weight: 600; border-bottom-width: 0; padding: 32px">Select Tenants</td>
+                            </tr>
+                            <tr>
                                 <th scope="row">Tenants</th>
                                 ${tenants.map(tenant => html`
                                     <td
@@ -314,14 +314,19 @@
                                     </td>
                                 `)}
                             </tr>
+                            <tr class="header-text-row">
+                                <td colspan="8" class="text-center" style="font-size: 1.5rem; font-weight: 600; border-bottom-width: 0; padding: 32px">
+                                    Or Select Features
+                                    ${isFeaturesDisabled && html`<div class="disabled-message" style="font-size: 1rem; margin-top: 0.5rem; color: #dc3545;">Prompt complexity limit reached. Disable tenants to select additional features.</div>`}
+                                </td>
+                            </tr>
                             <tr>
                                 <th scope="row">
                                     Example Steps
-                                    ${isExampleStepsDisabled && html`<div class="disabled-message">Prompt complexity limit reached. Disable tenants to select these features.</div>`}
                                 </th>
                                 ${exampleSteps.filter(step => !step.platforms || step.platforms.includes(selectedPlatform)).map(step => html`
                                     <td
-                                        class="text-center platform-cell ${selectedExampleSteps.includes(step.id) ? 'selected' : ''} ${isExampleStepsDisabled ? 'disabled' : ''}"
+                                        class="text-center platform-cell ${selectedExampleSteps.includes(step.id) ? 'selected' : ''} ${isFeaturesDisabled ? 'disabled' : ''}"
                                         onClick=${() => handleExampleStepClick(step.id)}
                                     >
                                         ${step.name}<br/>
@@ -332,11 +337,10 @@
                             <tr>
                                 <th scope="row">
                                     Runbooks
-                                    ${isRunbooksChannelsDisabled && html`<div class="disabled-message">Prompt complexity limit reached. Disable tenants to select these features.</div>`}
                                 </th>
                                 ${runbooks.map(runbook => html`
                                     <td
-                                        class="text-center platform-cell ${selectedRunbooks.includes(runbook.id) ? 'selected' : ''} ${isRunbooksChannelsDisabled ? 'disabled' : ''}"
+                                        class="text-center platform-cell ${selectedRunbooks.includes(runbook.id) ? 'selected' : ''} ${isFeaturesDisabled ? 'disabled' : ''}"
                                         onClick=${() => handleRunbookClick(runbook.id)}
                                     >
                                         ${runbook.name}<br/>
@@ -347,11 +351,10 @@
                             <tr>
                                 <th scope="row">
                                     Channels
-                                    ${isRunbooksChannelsDisabled && html`<div class="disabled-message">Prompt complexity limit reached. Disable tenants to select these features.</div>`}
                                 </th>
                                 ${channels.map(channel => html`
                                     <td
-                                        class="text-center platform-cell ${selectedChannels.includes(channel.id) ? 'selected' : ''} ${isRunbooksChannelsDisabled ? 'disabled' : ''}"
+                                        class="text-center platform-cell ${selectedChannels.includes(channel.id) ? 'selected' : ''} ${isFeaturesDisabled ? 'disabled' : ''}"
                                         onClick=${() => handleChannelClick(channel.id)}
                                     >
                                         ${channel.name}<br/>
