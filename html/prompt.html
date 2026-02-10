@@ -87,6 +87,7 @@
             const [selectedRunbooks, setSelectedRunbooks] = useState(() => loadFromStorage('selectedRunbooks', []));
             const [selectedChannels, setSelectedChannels] = useState(() => loadFromStorage('selectedChannels', []));
             const [selectedReleaseNotes, setSelectedReleaseNotes] = useState(() => loadFromStorage('selectedReleaseNotes', []));
+            const [selectedTriggers, setSelectedTriggers] = useState(() => loadFromStorage('selectedTriggers', []));
             const [promptText, setPromptText] = useState('');
             const [copyButtonText, setCopyButtonText] = useState('Copy to clipboard');
 
@@ -141,6 +142,10 @@
                         '#{/each}\n```' }
             ];
 
+            const triggers = [
+                { id: 'createrelease', name: 'Create Release on New Package', icon: 'fas fa-play-circle', instruction: '* Add a trigger to create a release when a new package is pushed to the feed.' }
+            ];
+
             // Save to localStorage whenever selections change
             useEffect(() => {
                 localStorage.setItem('selectedPlatform', JSON.stringify(selectedPlatform));
@@ -166,15 +171,19 @@
                 localStorage.setItem('selectedReleaseNotes', JSON.stringify(selectedReleaseNotes));
             }, [selectedReleaseNotes]);
 
+            useEffect(() => {
+                localStorage.setItem('selectedTriggers', JSON.stringify(selectedTriggers));
+            }, [selectedTriggers]);
+
             // Generate prompt on initial load and when selections change
             useEffect(() => {
-                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes);
+                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers);
                 setPromptText(prompt);
-            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes]);
+            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers]);
 
             // Check if features should be disabled when a tenant is selected OR when feature limit is reached
             // Feature limit depends on platform: Script Step and Blue/Green allow 4, others allow 1
-            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length + selectedReleaseNotes.length;
+            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length + selectedReleaseNotes.length + selectedTriggers.length;
             const featureLimit = (selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') ? 4 : 1;
             const isFeaturesDisabled = selectedTenant !== null || totalFeaturesSelected >= featureLimit;
 
@@ -193,6 +202,9 @@
                     if (selectedReleaseNotes.length > 0) {
                         setSelectedReleaseNotes([]);
                     }
+                    if (selectedTriggers.length > 0) {
+                        setSelectedTriggers([]);
+                    }
                 }
             }, [selectedTenant]);
 
@@ -203,7 +215,7 @@
                 }
             }, [selectedPlatform]);
 
-            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds) => {
+            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds, triggersIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
 
@@ -254,6 +266,15 @@
                         const releaseNote = releaseNotes.find(r => r.id === releaseNoteId);
                         if (releaseNote && releaseNote.instruction) {
                             additionalInstructions.push(releaseNote.instruction);
+                        }
+                    });
+                }
+
+                if (triggersIds && triggersIds.length > 0) {
+                    triggersIds.forEach(triggerId => {
+                        const trigger = triggers.find(t => t.id === triggerId);
+                        if (trigger && trigger.instruction) {
+                            additionalInstructions.push(trigger.instruction);
                         }
                     });
                 }
@@ -314,6 +335,15 @@
                     setSelectedReleaseNotes(selectedReleaseNotes.filter(id => id !== releaseNoteId));
                 } else if (!isFeaturesDisabled) {
                     setSelectedReleaseNotes([...selectedReleaseNotes, releaseNoteId]);
+                }
+            };
+
+            const handleTriggersClick = (triggerId) => {
+                // Allow deselection even if disabled, but prevent new selections
+                if (selectedTriggers.includes(triggerId)) {
+                    setSelectedTriggers(selectedTriggers.filter(id => id !== triggerId));
+                } else if (!isFeaturesDisabled) {
+                    setSelectedTriggers([...selectedTriggers, triggerId]);
                 }
             };
 
@@ -425,6 +455,20 @@
                                     >
                                         ${releaseNote.name}<br/>
                                         <i class="${releaseNote.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    Triggers
+                                </th>
+                                ${triggers.map(trigger => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedTriggers.includes(trigger.id) ? 'selected' : ''} ${isFeaturesDisabled && !selectedTriggers.includes(trigger.id) ? 'disabled' : ''}"
+                                        onClick=${() => handleTriggersClick(trigger.id)}
+                                    >
+                                        ${trigger.name}<br/>
+                                        <i class="${trigger.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
