@@ -304,7 +304,7 @@
                                         onClick=${() => handlePlatformClick(platform.id)}
                                     >
                                         ${platform.name}
-                                        ${platform.badge && html`<span class="badge bg-success ms-1">${platform.badge}</span>`}
+                                        ${platform.badge && html`<span class="badge ${platform.id === 'kubernetes' ? 'bg-info' : 'bg-success'} ms-1">${platform.badge}</span>`}
                                         <br/>
                                         <i class="${platform.icon} fa-2x"></i>
                                     </td>
