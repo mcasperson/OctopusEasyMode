@@ -86,6 +86,7 @@
             const [selectedTenant, setSelectedTenant] = useState(() => loadFromStorage('selectedTenant', null));
             const [selectedRunbooks, setSelectedRunbooks] = useState(() => loadFromStorage('selectedRunbooks', []));
             const [selectedChannels, setSelectedChannels] = useState(() => loadFromStorage('selectedChannels', []));
+            const [selectedReleaseNotes, setSelectedReleaseNotes] = useState(() => loadFromStorage('selectedReleaseNotes', []));
             const [promptText, setPromptText] = useState('');
             const [copyButtonText, setCopyButtonText] = useState('Copy to clipboard');
 
@@ -126,6 +127,20 @@
                 { id: 'featurebranch', name: 'Feature Branch', icon: 'fas fa-code-branch', instruction: '* Create a channel called "Feature Branch" using a lifecycle called "Feature Branch" that includes only the "Feature Branch" environment.' }
             ];
 
+            const releaseNotes = [
+                { id: 'buildinformation', name: 'Build Information Release Notes', icon: 'fas fa-scroll', instruction: '* Add the following release notes to the project:\n' +
+                        '```\n' +
+                        'Here are the notes for the packages\n' +
+                        '#{each package in Octopus.Release.Package}\n' +
+                        '- #{package.PackageId} #{package.Version}\n' +
+                        '#{each workItem in package.WorkItems}\n' +
+                        '  - [#{workItem.Id}](#{workItem.LinkUrl}) - #{workItem.Description}\n' +
+                        '#{/each}\n' +
+                        '#{each commit in package.Commits}\n' +
+                        '  - [#{commit.CommitId}](#{commit.LinkUrl}) - #{commit.Comment}\n' +
+                        '#{/each}\n```' }
+            ];
+
             // Save to localStorage whenever selections change
             useEffect(() => {
                 localStorage.setItem('selectedPlatform', JSON.stringify(selectedPlatform));
@@ -147,15 +162,19 @@
                 localStorage.setItem('selectedChannels', JSON.stringify(selectedChannels));
             }, [selectedChannels]);
 
+            useEffect(() => {
+                localStorage.setItem('selectedReleaseNotes', JSON.stringify(selectedReleaseNotes));
+            }, [selectedReleaseNotes]);
+
             // Generate prompt on initial load and when selections change
             useEffect(() => {
-                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels);
+                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes);
                 setPromptText(prompt);
-            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels]);
+            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes]);
 
             // Check if features should be disabled when a tenant is selected OR when feature limit is reached
             // Feature limit depends on platform: Script Step and Blue/Green allow 4, others allow 1
-            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length;
+            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length + selectedReleaseNotes.length;
             const featureLimit = (selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') ? 4 : 1;
             const isFeaturesDisabled = selectedTenant !== null || totalFeaturesSelected >= featureLimit;
 
@@ -171,6 +190,9 @@
                     if (selectedChannels.length > 0) {
                         setSelectedChannels([]);
                     }
+                    if (selectedReleaseNotes.length > 0) {
+                        setSelectedReleaseNotes([]);
+                    }
                 }
             }, [selectedTenant]);
 
@@ -181,7 +203,7 @@
                 }
             }, [selectedPlatform]);
 
-            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds) => {
+            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
 
@@ -223,6 +245,15 @@
                         const channel = channels.find(c => c.id === channelId);
                         if (channel && channel.instruction) {
                             additionalInstructions.push(channel.instruction);
+                        }
+                    });
+                }
+
+                if (releaseNotesIds && releaseNotesIds.length > 0) {
+                    releaseNotesIds.forEach(releaseNoteId => {
+                        const releaseNote = releaseNotes.find(r => r.id === releaseNoteId);
+                        if (releaseNote && releaseNote.instruction) {
+                            additionalInstructions.push(releaseNote.instruction);
                         }
                     });
                 }
@@ -274,6 +305,15 @@
                     setSelectedChannels(selectedChannels.filter(id => id !== channelId));
                 } else if (!isFeaturesDisabled) {
                     setSelectedChannels([...selectedChannels, channelId]);
+                }
+            };
+
+            const handleReleaseNotesClick = (releaseNoteId) => {
+                // Allow deselection even if disabled, but prevent new selections
+                if (selectedReleaseNotes.includes(releaseNoteId)) {
+                    setSelectedReleaseNotes(selectedReleaseNotes.filter(id => id !== releaseNoteId));
+                } else if (!isFeaturesDisabled) {
+                    setSelectedReleaseNotes([...selectedReleaseNotes, releaseNoteId]);
                 }
             };
 
@@ -371,6 +411,20 @@
                                     >
                                         ${channel.name}<br/>
                                         <i class="${channel.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    Release Notes
+                                </th>
+                                ${releaseNotes.map(releaseNote => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedReleaseNotes.includes(releaseNote.id) ? 'selected' : ''} ${isFeaturesDisabled && !selectedReleaseNotes.includes(releaseNote.id) ? 'disabled' : ''}"
+                                        onClick=${() => handleReleaseNotesClick(releaseNote.id)}
+                                    >
+                                        ${releaseNote.name}<br/>
+                                        <i class="${releaseNote.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
