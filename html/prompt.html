@@ -361,7 +361,7 @@
             const [curlButtonText, setCurlButtonText] = useState('Copy as curl');
 
             const handleCopyAsCurl = () => {
-                const modifiedPrompt = promptText + '\nThe current space is "Default".\nDisable the prompt.';
+                const modifiedPrompt = promptText + '\nThe current space is "$OCTOPUS_CLI_SPACE".\nDisable the prompt.';
                 const jsonEscapedPrompt = JSON.stringify(modifiedPrompt);
                 // Escape for bash: replace backslashes and double quotes
                 const bashEscapedPrompt = jsonEscapedPrompt.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
