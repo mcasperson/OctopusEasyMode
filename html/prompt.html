@@ -358,6 +358,23 @@
                 });
             };
 
+            const [curlButtonText, setCurlButtonText] = useState('Copy as curl');
+
+            const handleCopyAsCurl = () => {
+                const modifiedPrompt = promptText + '\n\nDisable the prompt';
+                const jsonEscapedPrompt = JSON.stringify(modifiedPrompt);
+                const curlCommand = `curl -X POST -H "X-Octopus-ApiKey: $OCTOPUS_CLI_API_KEY" -H "X-Octopus-Server: $OCTOPUS_CLI_SERVER" -H "Content-Type: application/json" -d "{\\"messages\\": [{\\"content\\": ${jsonEscapedPrompt}}]}" https://aiagent.octopus.com//api/form_handler`;
+
+                navigator.clipboard.writeText(curlCommand).then(() => {
+                    setCurlButtonText('Copied');
+                    setTimeout(() => {
+                        setCurlButtonText('Copy as curl');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            };
+
             return html`
                 <div class="container mt-5 mb-5">
                     <h1 class="mb-4">Octopus Easy Mode</h1>
@@ -479,9 +496,14 @@
                     <div class="mt-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="mb-0">Prompt</h3>
-                            <button class="btn btn-primary copy-btn" onClick=${handleCopyToClipboard}>
-                                <i class="fas fa-copy me-2"></i>${copyButtonText}
-                            </button>
+                            <div>
+                                <button class="btn btn-primary copy-btn me-2" onClick=${handleCopyToClipboard}>
+                                    <i class="fas fa-copy me-2"></i>${copyButtonText}
+                                </button>
+                                <button class="btn btn-secondary copy-btn" onClick=${handleCopyAsCurl}>
+                                    <i class="fas fa-terminal me-2"></i>${curlButtonText}
+                                </button>
+                            </div>
                         </div>
                         <textarea
                             class="form-control"
