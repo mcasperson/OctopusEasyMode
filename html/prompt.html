@@ -363,7 +363,9 @@
             const handleCopyAsCurl = () => {
                 const modifiedPrompt = promptText + '\nThe current space is "Default".\nDisable the prompt.';
                 const jsonEscapedPrompt = JSON.stringify(modifiedPrompt);
-                const curlCommand = `curl -X POST -H "X-Octopus-ApiKey: $OCTOPUS_CLI_API_KEY" -H "X-Octopus-Server: $OCTOPUS_CLI_SERVER" -H "Content-Type: application/json" -d "{\\"messages\\": [{\\"content\\": ${jsonEscapedPrompt}}]}" https://aiagent.octopus.com//api/form_handler`;
+                // Escape for bash: replace backslashes and double quotes
+                const bashEscapedPrompt = jsonEscapedPrompt.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                const curlCommand = `curl -X POST -H "X-Octopus-ApiKey: $OCTOPUS_CLI_API_KEY" -H "X-Octopus-Server: $OCTOPUS_CLI_SERVER" -H "Content-Type: application/json" -d "{\\"messages\\": [{\\"content\\": ${bashEscapedPrompt}}]}" https://aiagent.octopus.com//api/form_handler`;
 
                 navigator.clipboard.writeText(curlCommand).then(() => {
                     setCurlButtonText('Copied');
