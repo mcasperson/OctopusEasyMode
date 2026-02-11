@@ -215,6 +215,13 @@
                 }
             }, [selectedPlatform]);
 
+            // Clear triggers when platform is scriptstep or bluegreen
+            useEffect(() => {
+                if ((selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') && selectedTriggers.length > 0) {
+                    setSelectedTriggers([]);
+                }
+            }, [selectedPlatform]);
+
             const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds, triggersIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
@@ -339,6 +346,10 @@
             };
 
             const handleTriggersClick = (triggerId) => {
+                // Disable triggers for scriptstep and bluegreen platforms
+                if (selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') {
+                    return;
+                }
                 // Allow deselection even if disabled, but prevent new selections
                 if (selectedTriggers.includes(triggerId)) {
                     setSelectedTriggers(selectedTriggers.filter(id => id !== triggerId));
@@ -483,7 +494,7 @@
                                 </th>
                                 ${triggers.map(trigger => html`
                                     <td
-                                        class="text-center platform-cell ${selectedTriggers.includes(trigger.id) ? 'selected' : ''} ${isFeaturesDisabled && !selectedTriggers.includes(trigger.id) ? 'disabled' : ''}"
+                                        class="text-center platform-cell ${selectedTriggers.includes(trigger.id) ? 'selected' : ''} ${(isFeaturesDisabled && !selectedTriggers.includes(trigger.id)) || selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen' ? 'disabled' : ''}"
                                         onClick=${() => handleTriggersClick(trigger.id)}
                                     >
                                         ${trigger.name}<br/>
