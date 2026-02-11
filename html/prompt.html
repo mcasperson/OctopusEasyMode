@@ -88,6 +88,7 @@
             const [selectedChannels, setSelectedChannels] = useState(() => loadFromStorage('selectedChannels', []));
             const [selectedReleaseNotes, setSelectedReleaseNotes] = useState(() => loadFromStorage('selectedReleaseNotes', []));
             const [selectedTriggers, setSelectedTriggers] = useState(() => loadFromStorage('selectedTriggers', []));
+            const [selectedFreezes, setSelectedFreezes] = useState(() => loadFromStorage('selectedFreezes', []));
             const [promptText, setPromptText] = useState('');
             const [copyButtonText, setCopyButtonText] = useState('Copy to clipboard');
 
@@ -146,6 +147,12 @@
                 { id: 'createrelease', name: 'Create Release on New Package', icon: 'fas fa-play-circle', instruction: '* Add a trigger to create a release when a new package is pushed to the feed.' }
             ];
 
+            const freezes = [
+                { id: 'blackfriday', name: 'Black Friday Freeze', icon: 'fas fa-snowflake', instruction: '* Add a global deployment freeze for Black Friday that prevents deployments from November 23rd to November 29th.' },
+                { id: 'cybermonday', name: 'Cyber Monday Freeze', icon: 'fas fa-snowflake', instruction: '* Add a global deployment freeze for Cyber Monday that prevents deployments from November 30th to December 2nd.' },
+                { id: 'christmas', name: 'Christmas Freeze', icon: 'fas fa-snowflake', instruction: '* Add a global deployment freeze for Christmas that prevents deployments from December 20th to December 27th.' }
+            ];
+
             // Save to localStorage whenever selections change
             useEffect(() => {
                 localStorage.setItem('selectedPlatform', JSON.stringify(selectedPlatform));
@@ -175,15 +182,19 @@
                 localStorage.setItem('selectedTriggers', JSON.stringify(selectedTriggers));
             }, [selectedTriggers]);
 
+            useEffect(() => {
+                localStorage.setItem('selectedFreezes', JSON.stringify(selectedFreezes));
+            }, [selectedFreezes]);
+
             // Generate prompt on initial load and when selections change
             useEffect(() => {
-                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers);
+                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers, selectedFreezes);
                 setPromptText(prompt);
-            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers]);
+            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers, selectedFreezes]);
 
             // Check if features should be disabled when a tenant is selected OR when feature limit is reached
             // Feature limit depends on platform: Script Step and Blue/Green allow 4, others allow 1
-            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length + selectedReleaseNotes.length + selectedTriggers.length;
+            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length + selectedReleaseNotes.length + selectedTriggers.length + selectedFreezes.length;
             const featureLimit = (selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') ? 4 : 1;
             const isFeaturesDisabled = selectedTenant !== null || totalFeaturesSelected >= featureLimit;
 
@@ -205,6 +216,9 @@
                     if (selectedTriggers.length > 0) {
                         setSelectedTriggers([]);
                     }
+                    if (selectedFreezes.length > 0) {
+                        setSelectedFreezes([]);
+                    }
                 }
             }, [selectedTenant]);
 
@@ -222,7 +236,7 @@
                 }
             }, [selectedPlatform]);
 
-            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds, triggersIds) => {
+            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds, triggersIds, freezesIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
 
@@ -282,6 +296,15 @@
                         const trigger = triggers.find(t => t.id === triggerId);
                         if (trigger && trigger.instruction) {
                             additionalInstructions.push(trigger.instruction);
+                        }
+                    });
+                }
+
+                if (freezesIds && freezesIds.length > 0) {
+                    freezesIds.forEach(freezeId => {
+                        const freeze = freezes.find(f => f.id === freezeId);
+                        if (freeze && freeze.instruction) {
+                            additionalInstructions.push(freeze.instruction);
                         }
                     });
                 }
@@ -355,6 +378,15 @@
                     setSelectedTriggers(selectedTriggers.filter(id => id !== triggerId));
                 } else if (!isFeaturesDisabled) {
                     setSelectedTriggers([...selectedTriggers, triggerId]);
+                }
+            };
+
+            const handleFreezesClick = (freezeId) => {
+                // Allow deselection even if disabled, but prevent new selections
+                if (selectedFreezes.includes(freezeId)) {
+                    setSelectedFreezes(selectedFreezes.filter(id => id !== freezeId));
+                } else if (!isFeaturesDisabled) {
+                    setSelectedFreezes([...selectedFreezes, freezeId]);
                 }
             };
 
@@ -499,6 +531,20 @@
                                     >
                                         ${trigger.name}<br/>
                                         <i class="${trigger.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    Freezes
+                                </th>
+                                ${freezes.map(freeze => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedFreezes.includes(freeze.id) ? 'selected' : ''} ${isFeaturesDisabled && !selectedFreezes.includes(freeze.id) ? 'disabled' : ''}"
+                                        onClick=${() => handleFreezesClick(freeze.id)}
+                                    >
+                                        ${freeze.name}<br/>
+                                        <i class="${freeze.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
