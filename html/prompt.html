@@ -147,10 +147,34 @@
                 { id: 'createrelease', name: 'Create Release on New Package', icon: 'fas fa-play-circle', instruction: '* Add a trigger to create a release when a new package is pushed to the feed.' }
             ];
 
+            // Calculate freeze dates that are always in the future
+            const calculateFreezeDates = () => {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth(); // 0-indexed (0 = January, 11 = December)
+                const currentDay = now.getDate();
+
+                // Determine which year to use for each freeze
+                // Black Friday: November 23-29
+                const blackFridayYear = (currentMonth === 10 && currentDay > 29) || currentMonth === 11 ? currentYear + 1 : currentYear;
+                // Cyber Monday: November 30 - December 2
+                const cyberMondayYear = (currentMonth === 11 && currentDay > 2) ? currentYear + 1 : currentYear;
+                // Christmas: December 20-27
+                const christmasYear = (currentMonth === 11 && currentDay > 27) ? currentYear + 1 : currentYear;
+
+                return {
+                    blackFriday: { year: blackFridayYear, start: `November 23rd, ${blackFridayYear}`, end: `November 29th, ${blackFridayYear}` },
+                    cyberMonday: { year: cyberMondayYear, start: `November 30th, ${cyberMondayYear}`, end: `December 2nd, ${cyberMondayYear}` },
+                    christmas: { year: christmasYear, start: `December 20th, ${christmasYear}`, end: `December 27th, ${christmasYear}` }
+                };
+            };
+
+            const freezeDates = calculateFreezeDates();
+
             const freezes = [
-                { id: 'blackfriday', name: 'Black Friday Freeze', icon: 'fas fa-snowflake', instruction: '* Add a global deployment freeze for Black Friday that prevents deployments from November 23rd to November 29th.' },
-                { id: 'cybermonday', name: 'Cyber Monday Freeze', icon: 'fas fa-snowflake', instruction: '* Add a global deployment freeze for Cyber Monday that prevents deployments from November 30th to December 2nd.' },
-                { id: 'christmas', name: 'Christmas Freeze', icon: 'fas fa-snowflake', instruction: '* Add a global deployment freeze for Christmas that prevents deployments from December 20th to December 27th.' }
+                { id: 'blackfriday', name: 'Black Friday Freeze', icon: 'fas fa-snowflake', instruction: `* Add a global deployment freeze for Black Friday that prevents deployments from ${freezeDates.blackFriday.start} to ${freezeDates.blackFriday.end}.` },
+                { id: 'cybermonday', name: 'Cyber Monday Freeze', icon: 'fas fa-snowflake', instruction: `* Add a global deployment freeze for Cyber Monday that prevents deployments from ${freezeDates.cyberMonday.start} to ${freezeDates.cyberMonday.end}.` },
+                { id: 'christmas', name: 'Christmas Freeze', icon: 'fas fa-snowflake', instruction: `* Add a global deployment freeze for Christmas that prevents deployments from ${freezeDates.christmas.start} to ${freezeDates.christmas.end}.` }
             ];
 
             // Save to localStorage whenever selections change
