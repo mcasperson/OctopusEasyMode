@@ -258,17 +258,28 @@
                 }
             }, [selectedTenant]);
 
-            // Clear manual intervention when platform is not scriptstep
+            // Clear all features when platform changes
             useEffect(() => {
-                if (selectedPlatform !== 'scriptstep' && selectedExampleSteps.includes('manualintervention')) {
-                    setSelectedExampleSteps(selectedExampleSteps.filter(id => id !== 'manualintervention'));
+                if (selectedExampleSteps.length > 0) {
+                    setSelectedExampleSteps([]);
                 }
-            }, [selectedPlatform]);
-
-            // Clear triggers when platform is scriptstep or bluegreen
-            useEffect(() => {
-                if ((selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') && selectedTriggers.length > 0) {
+                if (selectedRunbooks.length > 0) {
+                    setSelectedRunbooks([]);
+                }
+                if (selectedChannels.length > 0) {
+                    setSelectedChannels([]);
+                }
+                if (selectedReleaseNotes.length > 0) {
+                    setSelectedReleaseNotes([]);
+                }
+                if (selectedTriggers.length > 0) {
                     setSelectedTriggers([]);
+                }
+                if (selectedFreezes.length > 0) {
+                    setSelectedFreezes([]);
+                }
+                if (selectedCommunityStepTemplates.length > 0) {
+                    setSelectedCommunityStepTemplates([]);
                 }
             }, [selectedPlatform]);
 
