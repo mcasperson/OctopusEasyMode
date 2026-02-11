@@ -89,6 +89,7 @@
             const [selectedReleaseNotes, setSelectedReleaseNotes] = useState(() => loadFromStorage('selectedReleaseNotes', []));
             const [selectedTriggers, setSelectedTriggers] = useState(() => loadFromStorage('selectedTriggers', []));
             const [selectedFreezes, setSelectedFreezes] = useState(() => loadFromStorage('selectedFreezes', []));
+            const [selectedCommunityStepTemplates, setSelectedCommunityStepTemplates] = useState(() => loadFromStorage('selectedCommunityStepTemplates', []));
             const [promptText, setPromptText] = useState('');
             const [copyButtonText, setCopyButtonText] = useState('Copy to clipboard');
 
@@ -177,6 +178,10 @@
                 { id: 'christmas', name: 'Christmas Freeze', icon: 'fas fa-snowflake', instruction: `* Add a global deployment freeze for Christmas that prevents deployments from ${freezeDates.christmas.start} to ${freezeDates.christmas.end}.` }
             ];
 
+            const communityStepTemplates = [
+                { id: 'calculatereleasemode', name: 'Calculate Release Mode', icon: 'fas fa-calculator', instruction: '* Add the community step template with the website "https://library.octopus.com/step-templates/d166457a-1421-4731-b143-dd6766fb95d5" as the first step with the name "Calculate Deployment Mode".' }
+            ];
+
             // Save to localStorage whenever selections change
             useEffect(() => {
                 localStorage.setItem('selectedPlatform', JSON.stringify(selectedPlatform));
@@ -210,15 +215,19 @@
                 localStorage.setItem('selectedFreezes', JSON.stringify(selectedFreezes));
             }, [selectedFreezes]);
 
+            useEffect(() => {
+                localStorage.setItem('selectedCommunityStepTemplates', JSON.stringify(selectedCommunityStepTemplates));
+            }, [selectedCommunityStepTemplates]);
+
             // Generate prompt on initial load and when selections change
             useEffect(() => {
-                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers, selectedFreezes);
+                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers, selectedFreezes, selectedCommunityStepTemplates);
                 setPromptText(prompt);
-            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers, selectedFreezes]);
+            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers, selectedFreezes, selectedCommunityStepTemplates]);
 
             // Check if features should be disabled when a tenant is selected OR when feature limit is reached
             // Feature limit depends on platform: Script Step and Blue/Green allow 4, others allow 1
-            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length + selectedReleaseNotes.length + selectedTriggers.length + selectedFreezes.length;
+            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length + selectedReleaseNotes.length + selectedTriggers.length + selectedFreezes.length + selectedCommunityStepTemplates.length;
             const featureLimit = (selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') ? 4 : 1;
             const isFeaturesDisabled = selectedTenant !== null || totalFeaturesSelected >= featureLimit;
 
@@ -243,6 +252,9 @@
                     if (selectedFreezes.length > 0) {
                         setSelectedFreezes([]);
                     }
+                    if (selectedCommunityStepTemplates.length > 0) {
+                        setSelectedCommunityStepTemplates([]);
+                    }
                 }
             }, [selectedTenant]);
 
@@ -260,7 +272,7 @@
                 }
             }, [selectedPlatform]);
 
-            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds, triggersIds, freezesIds) => {
+            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds, triggersIds, freezesIds, communityStepTemplatesIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
 
@@ -329,6 +341,15 @@
                         const freeze = freezes.find(f => f.id === freezeId);
                         if (freeze && freeze.instruction) {
                             additionalInstructions.push(freeze.instruction);
+                        }
+                    });
+                }
+
+                if (communityStepTemplatesIds && communityStepTemplatesIds.length > 0) {
+                    communityStepTemplatesIds.forEach(templateId => {
+                        const template = communityStepTemplates.find(t => t.id === templateId);
+                        if (template && template.instruction) {
+                            additionalInstructions.push(template.instruction);
                         }
                     });
                 }
@@ -411,6 +432,15 @@
                     setSelectedFreezes(selectedFreezes.filter(id => id !== freezeId));
                 } else if (!isFeaturesDisabled) {
                     setSelectedFreezes([...selectedFreezes, freezeId]);
+                }
+            };
+
+            const handleCommunityStepTemplatesClick = (templateId) => {
+                // Allow deselection even if disabled, but prevent new selections
+                if (selectedCommunityStepTemplates.includes(templateId)) {
+                    setSelectedCommunityStepTemplates(selectedCommunityStepTemplates.filter(id => id !== templateId));
+                } else if (!isFeaturesDisabled) {
+                    setSelectedCommunityStepTemplates([...selectedCommunityStepTemplates, templateId]);
                 }
             };
 
@@ -569,6 +599,20 @@
                                     >
                                         ${freeze.name}<br/>
                                         <i class="${freeze.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    Community Step Templates
+                                </th>
+                                ${communityStepTemplates.map(template => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedCommunityStepTemplates.includes(template.id) ? 'selected' : ''} ${isFeaturesDisabled && !selectedCommunityStepTemplates.includes(template.id) ? 'disabled' : ''}"
+                                        onClick=${() => handleCommunityStepTemplatesClick(template.id)}
+                                    >
+                                        ${template.name}<br/>
+                                        <i class="${template.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
