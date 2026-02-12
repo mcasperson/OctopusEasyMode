@@ -166,6 +166,7 @@
             const [selectedExampleSteps, setSelectedExampleSteps] = useState(() => loadFromStorage('selectedExampleSteps', []));
             const [selectedTenant, setSelectedTenant] = useState(() => loadFromStorage('selectedTenant', null));
             const [selectedRunbooks, setSelectedRunbooks] = useState(() => loadFromStorage('selectedRunbooks', []));
+            const [selectedChannels, setSelectedChannels] = useState(() => loadFromStorage('selectedChannels', []));
             const [selectedReleaseNotes, setSelectedReleaseNotes] = useState(() => loadFromStorage('selectedReleaseNotes', []));
             const [selectedTriggers, setSelectedTriggers] = useState(() => loadFromStorage('selectedTriggers', []));
             const [selectedFreezes, setSelectedFreezes] = useState(() => loadFromStorage('selectedFreezes', []));
@@ -201,6 +202,12 @@
                 { id: 'database', name: 'Database', icon: 'fas fa-database', instruction: '* Add a runbook to simulate a database backup scoped to the "Production" environment.' },
                 { id: 'service', name: 'Service', icon: 'fas fa-cogs', instruction: '* Add a runbook to simulate the restart of the service scoped to the environments from the project\'s lifecycles.' },
                 { id: 'logs', name: 'Logs', icon: 'fas fa-file-alt', instruction: '* Add a runbook to simulate the retrieval of logs scoped to the environments from the project\'s lifecycles.' }
+            ];
+
+
+            const channels = [
+                { id: 'hotfix', name: 'Hot Fix', icon: 'fas fa-fire-extinguisher', instruction: '* Create a channel called "Hot Fix" using a lifecycle called "Hot Fix" that includes only the "Production" environment.' },
+                { id: 'featurebranch', name: 'Feature Branch', icon: 'fas fa-code-branch', instruction: '* Create a channel called "Feature Branch" using a lifecycle called "Feature Branch" that includes only the "Feature Branch" environment.' }
             ];
 
             const releaseNotes = [
@@ -273,6 +280,9 @@
                 localStorage.setItem('selectedRunbooks', JSON.stringify(selectedRunbooks));
             }, [selectedRunbooks]);
 
+            useEffect(() => {
+                localStorage.setItem('selectedChannels', JSON.stringify(selectedChannels));
+            }, [selectedChannels]);
 
             useEffect(() => {
                 localStorage.setItem('selectedReleaseNotes', JSON.stringify(selectedReleaseNotes));
@@ -292,13 +302,13 @@
 
             // Generate prompt on initial load and when selections change
             useEffect(() => {
-                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedReleaseNotes, selectedTriggers, selectedFreezes, selectedCommunityStepTemplates);
+                const prompt = generatePrompt(selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers, selectedFreezes, selectedCommunityStepTemplates);
                 setPromptText(prompt);
-            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedReleaseNotes, selectedTriggers, selectedFreezes, selectedCommunityStepTemplates]);
+            }, [selectedPlatform, selectedExampleSteps, selectedTenant, selectedRunbooks, selectedChannels, selectedReleaseNotes, selectedTriggers, selectedFreezes, selectedCommunityStepTemplates]);
 
             // Check if features should be disabled when a tenant is selected OR when feature limit is reached
             // Feature limit depends on platform: Script Step and Blue/Green allow 4, others allow 1
-            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedReleaseNotes.length + selectedTriggers.length + selectedFreezes.length + selectedCommunityStepTemplates.length;
+            const totalFeaturesSelected = selectedExampleSteps.length + selectedRunbooks.length + selectedChannels.length + selectedReleaseNotes.length + selectedTriggers.length + selectedFreezes.length + selectedCommunityStepTemplates.length;
             const featureLimit = (selectedPlatform === 'scriptstep' || selectedPlatform === 'bluegreen') ? 4 : 1;
             const isFeaturesDisabled = selectedTenant !== null || totalFeaturesSelected >= featureLimit;
 
@@ -310,6 +320,9 @@
                     }
                     if (selectedRunbooks.length > 0) {
                         setSelectedRunbooks([]);
+                    }
+                    if (selectedChannels.length > 0) {
+                        setSelectedChannels([]);
                     }
                     if (selectedReleaseNotes.length > 0) {
                         setSelectedReleaseNotes([]);
@@ -334,6 +347,9 @@
                 if (selectedRunbooks.length > 0) {
                     setSelectedRunbooks([]);
                 }
+                if (selectedChannels.length > 0) {
+                    setSelectedChannels([]);
+                }
                 if (selectedReleaseNotes.length > 0) {
                     setSelectedReleaseNotes([]);
                 }
@@ -348,7 +364,7 @@
                 }
             }, [selectedPlatform]);
 
-            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, releaseNotesIds, triggersIds, freezesIds, communityStepTemplatesIds) => {
+            const generatePrompt = (platformId, exampleStepsIds, tenantId, runbookIds, channelIds, releaseNotesIds, triggersIds, freezesIds, communityStepTemplatesIds) => {
                 const platform = platforms.find(p => p.id === platformId);
                 if (!platform) return '';
 
@@ -384,6 +400,15 @@
                     });
                 }
 
+
+                if (channelIds && channelIds.length > 0) {
+                    channelIds.forEach(channelId => {
+                        const channel = channels.find(c => c.id === channelId);
+                        if (channel && channel.instruction) {
+                            additionalInstructions.push(channel.instruction);
+                        }
+                    });
+                }
 
                 if (releaseNotesIds && releaseNotesIds.length > 0) {
                     releaseNotesIds.forEach(releaseNoteId => {
@@ -461,6 +486,15 @@
                 }
             };
 
+
+            const handleChannelClick = (channelId) => {
+                // Allow deselection even if disabled, but prevent new selections
+                if (selectedChannels.includes(channelId)) {
+                    setSelectedChannels(selectedChannels.filter(id => id !== channelId));
+                } else if (!isFeaturesDisabled) {
+                    setSelectedChannels([...selectedChannels, channelId]);
+                }
+            };
 
             const handleReleaseNotesClick = (releaseNoteId) => {
                 // Allow deselection even if disabled, but prevent new selections
@@ -603,6 +637,20 @@
                                     >
                                         <span class="item-name">${runbook.name}<br/></span>
                                         <i class="${runbook.icon} fa-2x"></i>
+                                    </td>
+                                `)}
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    Channels
+                                </th>
+                                ${channels.map(channel => html`
+                                    <td
+                                        class="text-center platform-cell ${selectedChannels.includes(channel.id) ? 'selected' : ''} ${isFeaturesDisabled && !selectedChannels.includes(channel.id) ? 'disabled' : ''}"
+                                        onClick=${() => handleChannelClick(channel.id)}
+                                    >
+                                        <span class="item-name">${channel.name}<br/></span>
+                                        <i class="${channel.icon} fa-2x"></i>
                                     </td>
                                 `)}
                             </tr>
