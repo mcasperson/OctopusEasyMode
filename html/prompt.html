@@ -105,7 +105,6 @@
 
             const exampleSteps = [
                 { id: 'smoketests', name: 'Smoke Tests', icon: 'fas fa-vial', instruction: '* Add a script step at the end of the deployment process to run smoke tests with a script that echoes "Running Smoke Test...".' },
-                { id: 'slacknotification', name: 'Slack Notification', icon: 'fab fa-slack', instruction: '* Add a script step at the end of the deployment process to send a Slack notification with a script that echoes "Sending notification...".' },
                 { id: 'openfirewall', name: 'Open Firewall', icon: 'fas fa-shield-alt', instruction: '* Add a step at the end of the deployment process to open the firewall with a script that echoes "Opening Firewall Ports...".' },
                 { id: 'publishreleasenotes', name: 'Publish Release Notes', icon: 'fas fa-sticky-note', instruction: '* Add a step at the end of the deployment process to publish release notes with a script that echoes "Publishing Notes...".' },
                 { id: 'manualintervention', name: 'Manual Intervention', icon: 'fas fa-hand-paper', instruction: '* Add a manual intervention step at the start of the deployment process, scoped to the "Production" environment.', platforms: ['scriptstep'] }
@@ -179,7 +178,8 @@
             ];
 
             const communityStepTemplates = [
-                { id: 'calculatereleasemode', name: 'Calculate Release Mode', icon: 'fas fa-calculator', instruction: '* Add the community step template with the website "https://library.octopus.com/step-templates/d166457a-1421-4731-b143-dd6766fb95d5" as the first step with the name "Calculate Deployment Mode".' }
+                { id: 'calculatereleasemode', name: 'Calculate Release Mode', icon: 'fas fa-calculator', instruction: '* Add the community step template with the website "https://library.octopus.com/step-templates/d166457a-1421-4731-b143-dd6766fb95d5" as the first step with the name "Calculate Deployment Mode".' },
+                { id: 'slackmessage', name: 'Slack', icon: 'fas fa-slack', instruction: '* Add the community step template with the website "https://library.octopus.com/step-templates/99e6f203-3061-4018-9e34-4a3a9c3c3179" as the first step with the name "Send Slack Message".' }
             ];
 
             // Save to localStorage whenever selections change
