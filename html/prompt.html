@@ -609,7 +609,7 @@
                                 <td colspan="8" class="text-center" style="font-size: 1.5rem; font-weight: 600; border-bottom-width: 0; padding: 32px">
                                     3. Or, Select Features
                                     ${isFeaturesDisabled && selectedTenant !== null && html`<div class="disabled-message" style="font-size: 1rem; margin-top: 0.5rem; color: #dc3545;">Prompt complexity limit reached. Disable tenants to select additional features.</div>`}
-                                    ${isFeaturesDisabled && selectedTenant === null && totalFeaturesSelected >= featureLimit && html`<div class="disabled-message" style="font-size: 1rem; margin-top: 0.5rem; color: #dc3545;">Prompt complexity limit reached. Maximum ${featureLimit} feature${featureLimit > 1 ? 's' : ''} can be selected.</div>`}
+                                    ${isFeaturesDisabled && selectedTenant === null && totalFeaturesSelected >= featureLimit && html`<div class="disabled-message" style="font-size: 1rem; margin-top: 0.5rem; color: #dc3545;">Prompt complexity limit reached. Maximum ${featureLimit} feature${featureLimit > 1 ? 's' : ''} can be selected. Select a flexible platform, like the Script Step, to select more features.</div>`}
                                 </td>
                             </tr>
                             <tr>
